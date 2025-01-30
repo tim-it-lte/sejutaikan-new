@@ -9,6 +9,7 @@ use Auth;
 use Illuminate\Http\Request;
 use PDF;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PimpinanController extends Controller
@@ -423,12 +424,8 @@ class PimpinanController extends Controller
 
         // Cek apakah request berhasil
         if ($response->successful()) {
-
-
             $fileContent = $response->body(); // Dapatkan konten file dari response
 
-            //file_put_contents('public/storage/pdf/'.$fileName,$fileContent);
-            //file_put_contents(storage_path('app/public/pdf/'.$fileName), $fileContent);
             Storage::disk('public')->put('certificate/' . $fileName, $fileContent);
 
             // update status permohonan
@@ -438,8 +435,15 @@ class PimpinanController extends Controller
             ]);
             return redirect()->route('pimpinan.all.permohonan')->with('success', 'Sukses Pembubuhan TTE');
         } else {
+            // Ambil error message atau status code dari response
+            $errorMessage = $response->body(); // Bisa juga $response->json() jika response berupa JSON
+            $errorStatus = $response->status(); // Status code HTTP
 
-            return redirect()->route('pimpinan.all.permohonan')->with('error', 'Gagal Pembubuhan TTE');
+            // Log atau tampilkan error
+            Log::error("Error TTE: Status $errorStatus, Message: $errorMessage");
+
+            return redirect()->route('pimpinan.all.permohonan')->with('error', 'Gagal Pembubuhan TTE. Error: ' . $errorMessage);
         }
+
     }
 }
